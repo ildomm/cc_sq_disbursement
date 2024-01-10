@@ -12,7 +12,7 @@ The application consists of two parts:
 ### 2. Order processor for disbursements
 - The processor is responsible for processing the orders and calculate the disbursements.
 - The processor has two execution modes:
-    - Without parameters: process all the orders from the database when `created_at` = today.
+    - Without parameters: process all the orders from the database when `created_at` = yesterday.
     - With date range parameters: process all the orders from the database when `created_at` is between the given dates.
 
 ### Database schema
@@ -22,20 +22,12 @@ The application consists of two parts:
 title: Tables.
 ---
 erDiagram
-   // Orders
    orders ||--o{ merchants : "Belongs To"
-   orders ||--o{ merchant_disbursements : "Belongs To"
+   orders ||--o{ merchant_disbursements : "Contains"
 
-   // Merchants
-   merchants }|o--o{ orders : "Has"
-   merchants ||--o{ merchant_disbursements : "Has"
-
-   // Merchant Disbursements
-   merchant_disbursements }|o--|| orders : "Contains"
-
-   // Relationships
    merchants }|..|{ orders : "One-to-Many"
    merchants }|..|{ merchant_disbursements : "One-to-Many"
+           
 ```
 
 ## Build process
