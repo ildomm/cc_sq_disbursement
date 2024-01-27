@@ -1,4 +1,3 @@
-# Should match the version used in https://github.com/LoyaltyNZ/service_base_golang_builder
 # See https://golangci-lint.run/usage/install/
 LINTER_VERSION = v1.55.0
 
