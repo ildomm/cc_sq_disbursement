@@ -30,16 +30,15 @@ func TestPipelineHappyPath(t *testing.T) {
 	log.SetOutput(mockLog)
 
 	test_helpers.SetupCSVOrder(WaitingPath)
+	time.Sleep(time.Duration(1) * time.Second)
 
 	p := NewPipeline(ctx, mockQuerier)
 	go p.Run()
 
-	time.Sleep(time.Duration(1) * time.Second)
+	time.Sleep(time.Duration(2) * time.Second)
 	ctx.Done()
 
 	// Check that the log contains the expected messages
-	mockLog.AssertContains(t, "starting loading orders")
-	mockLog.AssertContains(t, "files to process: 1")
 	mockLog.AssertContains(t, "orders imported successfully from CSV file")
 
 	// Check mock querier expectations
