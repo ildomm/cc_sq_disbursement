@@ -29,3 +29,28 @@ jobs:
         threshold-total: 95
         git-branch: badges
         git-token: ${{ github.ref_name == 'main' && secrets.GITHUB_TOKEN || '' }}
+
+  container-job:
+    runs-on: ubuntu-latest
+    container: node:10.18-jessie
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        with:
+          go-version: '1.20'
+        
+      - name: Test
+        run: go test $(go list ./... | grep -v "database" | grep -v "order_load" )
+        env:
+          POSTGRES_HOST: postgres
+          POSTGRES_PORT: 5432
