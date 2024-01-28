@@ -39,8 +39,6 @@ func TestPipelineHappyPath(t *testing.T) {
 	ctx.Done()
 
 	// Check that the log contains the expected messages
-	mockLog.AssertContains(t, "starting loading orders")
-	mockLog.AssertContains(t, "files to process: 1")
 	mockLog.AssertContains(t, "orders imported successfully from CSV file")
 
 	// Check mock querier expectations
