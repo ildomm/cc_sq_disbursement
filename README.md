@@ -1,3 +1,5 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/ildomm/cc_sq_disbursement?cache=v1)](https://goreportcard.com/report/github.com/ildomm/cc_sq_disbursement)
+
 # CC Disbursement
 Automate the calculation of merchants’ disbursements payouts and 
 commissions for existing, present in the CSV files, and new orders.
