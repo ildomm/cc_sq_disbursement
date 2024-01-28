@@ -17,14 +17,14 @@ jobs:
       run: go build -v ./...
 
     - name: Test
-      run: go test $(go list ./...  | grep -v "order_load" )
+      run: go test ./... 
 
-    - name: Test order_load
+    - name: Test only order_load
       run: go clean -testcache && go test $(go list ./...  | grep "order_load" )
       
 
     - name: Generate test coverage
-      run: go test $(go list ./...  | grep -v "order_load" ) -coverprofile=./cover.out -covermode=atomic -coverpkg=./...
+      run: go test ./... -coverprofile=./cover.out -covermode=atomic -coverpkg=./...
     - name: check test coverage
       uses: vladopajic/go-test-coverage@v2
       with:
