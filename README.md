@@ -1,4 +1,5 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/ildomm/cc_sq_disbursement?cache=v1)](https://goreportcard.com/report/github.com/ildomm/cc_sq_disbursement)
+[coverage](https://raw.githubusercontent.com/ildomm/cc_sq_disbursement/badges/.badges/main/coverage.svg)
 
 # CC Disbursement
 Automate the calculation of merchants’ disbursements payouts and 
