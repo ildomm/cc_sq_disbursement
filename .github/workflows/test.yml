@@ -1,0 +1,31 @@
+name: test
+on: [push]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.20'
+
+    - name: Build
+      run: go build -v ./...
+
+    - name: Test
+      run: go test $(go list ./... | grep -v "database" | grep -v "order_load" )
+
+    - name: Generate test coverage
+      run: go test $(go list ./... | grep -v "database" | grep -v "order_load" ) -coverprofile=./cover.out -covermode=atomic -coverpkg=./...
+    - name: check test coverage
+      uses: vladopajic/go-test-coverage@v2
+      with:
+        profile: cover.out
+        local-prefix: github.com/ildomm/cc_sq_disbursement
+        threshold-total: 95
+        git-branch: badges
+        git-token: ${{ github.ref_name == 'main' && secrets.GITHUB_TOKEN || '' }}
