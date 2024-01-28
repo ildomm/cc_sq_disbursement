@@ -30,11 +30,12 @@ func TestPipelineHappyPath(t *testing.T) {
 	log.SetOutput(mockLog)
 
 	test_helpers.SetupCSVOrder(WaitingPath)
+	time.Sleep(time.Duration(1) * time.Second)
 
 	p := NewPipeline(ctx, mockQuerier)
 	go p.Run()
 
-	time.Sleep(time.Duration(1) * time.Second)
+	time.Sleep(time.Duration(2) * time.Second)
 	ctx.Done()
 
 	// Check that the log contains the expected messages

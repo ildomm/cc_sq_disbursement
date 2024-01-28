@@ -24,6 +24,19 @@ func SetupCSVOrder(dirPath string) {
 		fmt.Printf("Error: %v\n", err)
 		return
 	}
+
+	const maxRetries = 10
+	for i := 0; i < maxRetries; i++ {
+		if _, err := os.Stat(fullPath); err == nil {
+			fmt.Println("File created successfully:", fullPath)
+			return
+		} else {
+			fmt.Println("Waiting for file to be detected. Attempt:", i+1)
+			time.Sleep(1 * time.Second)
+		}
+	}
+
+	fmt.Println("File could not be detected after 10 retries.")
 }
 
 // createFile creates a file at the specified path.
