@@ -19,6 +19,10 @@ jobs:
     - name: Test
       run: go test $(go list ./...  | grep -v "order_load" )
 
+    - name: Test order_load
+      run: go clean -testcache && go test $(go list ./...  | grep "order_load" )
+      
+
     - name: Generate test coverage
       run: go test $(go list ./...  | grep -v "order_load" ) -coverprofile=./cover.out -covermode=atomic -coverpkg=./...
     - name: check test coverage
