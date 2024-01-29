@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/ildomm/cc_sq_disbursement/entities"
 	"github.com/ildomm/cc_sq_disbursement/test_helpers"
 	"github.com/stretchr/testify/assert"
@@ -10,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestPostgresQuerier(t *testing.T) {
@@ -121,4 +123,86 @@ func TestDatabaseBasicOperations(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, orderReloaded)
 	require.Equal(t, true, orderReloaded.Disbursed)
+}
+
+func TestSelectSumDisbursementsForMerchant(t *testing.T) {
+	ctx, teardownTest, querier := setupTestQuerier(t)
+	defer teardownTest(t)
+
+	// Create a merchant
+	merchant := entities.Merchant{
+		ID: uuid.MustParse("66312006-4d7e-45c4-9c28-788f4aa68a62"),
+	}
+
+	err := insertTestMerchants(ctx, querier)
+	require.NoError(t, err)
+
+	// Create a disbursement for the merchant
+	disbursement := entities.MerchantDisbursement{
+		MerchantID:            merchant.ID,
+		DisbursementFrequency: entities.DailyDisbursementFrequency,
+		OrdersStartAt:         time.Now().Add(-24 * time.Hour),
+		OrdersEndAt:           time.Now(),
+		FeeAmount:             0.0,
+		FeeAmountCorrection:   0.0,
+		OrdersSumAmount:       100.0,
+		OrdersTotalEntries:    1,
+	}
+	err = querier.InsertDisbursement(ctx, disbursement)
+	require.NoError(t, err)
+
+	// Define the time range for the test
+	startTime := time.Now().Add(-24 * time.Hour) // 1 day ago
+	endTime := time.Now()
+
+	// Call the method under test
+	result, err := querier.SelectSumDisbursementsForMerchant(ctx, merchant.ID, startTime, endTime, entities.DailyDisbursementFrequency)
+	require.NoError(t, err)
+
+	// Assert that the result is as expected
+	assert.NotNil(t, result)
+}
+
+func TestSelectMerchant(t *testing.T) {
+	ctx, teardownTest, querier := setupTestQuerier(t)
+	defer teardownTest(t)
+
+	// Insert test merchant data
+	err := insertTestMerchants(ctx, querier)
+	require.NoError(t, err)
+
+	t.Run("SelectExistingMerchant", func(t *testing.T) {
+		// UUID of one of the predefined merchants
+		testUUID := uuid.MustParse("66312006-4d7e-45c4-9c28-788f4aa68a62")
+
+		// Call the method under test
+		merchant, err := querier.SelectMerchant(ctx, testUUID)
+		require.NoError(t, err)
+		require.NotNil(t, merchant)
+		assert.Equal(t, testUUID, merchant.ID)
+		assert.Equal(t, "apadberg_group", merchant.Reference)
+	})
+
+	t.Run("SelectNonExistingMerchant", func(t *testing.T) {
+		// UUID that does not exist in the database
+		nonExistingUUID := uuid.New()
+
+		// Call the method under test
+		merchant, err := querier.SelectMerchant(ctx, nonExistingUUID)
+		require.NoError(t, err)
+		assert.Nil(t, merchant)
+	})
+}
+
+func insertTestMerchants(ctx context.Context, querier *PostgresQuerier) error {
+	const insertMerchantsSQL = `
+		INSERT INTO merchants (id, reference, email, live_at, disbursement_frequency, minimum_monthly_fee, created_at, updated_at)
+		VALUES
+		    ('66312006-4d7e-45c4-9c28-788f4aa68a62', 'apadberg_group', 'ainfo@padberg-group.com', '2023-02-01', 'daily', 0.0, NOW(), NOW()),
+		    ('61649242-a612-46ba-82d8-225542bb9576', 'adeckow_gibson', 'ainfo@deckow-gibson.com', '2022-12-14', 'daily', 0.0, NOW(), NOW()),
+		    ('6616488f-c8b2-45dd-b29f-364d12a20238', 'aromaguera_and_sons', 'ainfo@romaguera-and-sons.com', '2022-12-10', 'daily', 0.0, NOW(), NOW()),
+		    ('6b6d2b8a-f06c-4298-8f27-f33545eb5899', 'arosenbaum_parisian', 'ainfo@rosenbaum-parisian.com', '2022-11-09', 'weekly', 15.0, NOW(), NOW())`
+
+	_, err := querier.dbConn.ExecContext(ctx, insertMerchantsSQL)
+	return err
 }

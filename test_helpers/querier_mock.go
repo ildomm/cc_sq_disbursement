@@ -20,6 +20,7 @@ func NewMockQuerier() *mockQuerier {
 	}
 
 	mocked.keys["orders"] = make(map[string]interface{})
+	mocked.keys["disbursement"] = make(map[string]interface{})
 
 	return mocked
 }

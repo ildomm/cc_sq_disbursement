@@ -3,6 +3,7 @@ package order_load
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/ildomm/cc_sq_disbursement/system"
 	"github.com/ildomm/cc_sq_disbursement/test_helpers"
 	"github.com/stretchr/testify/mock"
@@ -30,12 +31,12 @@ func TestPipelineHappyPath(t *testing.T) {
 	log.SetOutput(mockLog)
 
 	test_helpers.SetupCSVOrder(WaitingPath)
-	time.Sleep(time.Duration(1) * time.Second)
+	//time.Sleep(time.Duration(1) * time.Second)
 
 	p := NewPipeline(ctx, mockQuerier)
 	go p.Run()
 
-	time.Sleep(time.Duration(2) * time.Second)
+	time.Sleep(time.Duration(1) * time.Second)
 	ctx.Done()
 
 	// Check that the log contains the expected messages
@@ -164,11 +165,55 @@ func TestPipelineWhenOrderExists(t *testing.T) {
 }
 
 func TestPipelineBuildOrderHappyPath(t *testing.T) {
-	// TODO: Implement
-	// Not doing right now because we are running out of time
+	ctx := context.Background()
+	mockQuerier := test_helpers.NewMockQuerier()
+	merchant := test_helpers.SetupMerchantTemplate()
+	order := test_helpers.SetupOrderTemplate()
+
+	mockQuerier.On("SelectMerchantByReference", ctx, "anything").Return(&merchant, nil)
+
+	p := NewPipeline(ctx, mockQuerier)
+
+	record := []string{order.ID, "anything", fmt.Sprintf("%.2f", order.Amount), order.CreatedAt.Format(time.DateOnly)}
+	builtOrder, err := p.buildOrder(record)
+	require.NoError(t, err)
+	require.NotNil(t, builtOrder)
+	require.Equal(t, order.ID, builtOrder.ID)
+	require.Equal(t, merchant.ID, builtOrder.MerchantID)
+	require.Equal(t, order.Amount, builtOrder.Amount)
 }
 
 func TestPipelineBuildOrderOnInvalidValues(t *testing.T) {
-	// TODO: Implement
-	// Not doing right now because we are running out of time
+	ctx := context.Background()
+	merchant := test_helpers.SetupMerchantTemplate()
+
+	t.Run("InvalidMerchantReference", func(t *testing.T) {
+		mockQuerier := test_helpers.NewMockQuerier()
+		mockQuerier.On("SelectMerchantByReference", ctx, "non_existent_merchant").Return(nil, errors.New("merchant not found"))
+		p := NewPipeline(ctx, mockQuerier)
+
+		record := []string{"invalid_id", "non_existent_merchant", "100.00", "2021-10-01"}
+		_, err := p.buildOrder(record)
+		require.Error(t, err)
+	})
+
+	t.Run("InvalidAmount", func(t *testing.T) {
+		mockQuerier := test_helpers.NewMockQuerier()
+		mockQuerier.On("SelectMerchantByReference", ctx, merchant.Reference).Return(&merchant, nil)
+		p := NewPipeline(ctx, mockQuerier)
+
+		record := []string{"valid_id", merchant.Reference, "not_a_number", "2021-10-01"}
+		_, err := p.buildOrder(record)
+		require.Error(t, err)
+	})
+
+	t.Run("InvalidDate", func(t *testing.T) {
+		mockQuerier := test_helpers.NewMockQuerier()
+		mockQuerier.On("SelectMerchantByReference", ctx, merchant.Reference).Return(&merchant, nil)
+		p := NewPipeline(ctx, mockQuerier)
+
+		record := []string{"valid_id", merchant.Reference, "100.00", "invalid_date"}
+		_, err := p.buildOrder(record)
+		require.Error(t, err)
+	})
 }
