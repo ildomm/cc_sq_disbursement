@@ -70,3 +70,74 @@ func TestParseDisbursementDateRangeInvalidParameters(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestSetGlobalTimezoneUTC(t *testing.T) {
+	err := SetGlobalTimezoneUTC()
+	require.NoError(t, err)
+
+	// Check if time.Local is set to UTC
+	require.Equal(t, time.UTC, time.Local)
+
+	// Optional: Test some time-related functions
+	now := time.Now()
+	require.Equal(t, "UTC", now.Location().String())
+}
+
+func TestValidDbURL(t *testing.T) {
+	os.Setenv("DATABASE_URL", "postgres://user:pass@host:5432/dbname")
+	defer os.Unsetenv("DATABASE_URL")
+
+	url, err := ParseDBConnURL([]string{})
+	require.NoError(t, err)
+	require.Equal(t, "postgres://user:pass@host:5432/dbname", url)
+}
+
+func TestFirstDayOfLastMonth(t *testing.T) {
+	tests := []struct {
+		day      time.Time
+		expected time.Time
+	}{
+		{time.Date(2023, 5, 15, 0, 0, 0, 0, time.UTC), time.Date(2023, 4, 1, 0, 0, 0, 0, time.UTC)},
+	}
+
+	for _, test := range tests {
+		result := FirstDayOfLastMonth(test.day)
+		require.Equal(t, test.expected, result)
+	}
+}
+
+func TestLastDayOfLastMonth(t *testing.T) {
+	tests := []struct {
+		day      time.Time
+		expected time.Time
+	}{
+		{time.Date(2023, 5, 15, 0, 0, 0, 0, time.UTC), time.Date(2023, 4, 30, 0, 0, 0, 0, time.UTC)},
+	}
+
+	for _, test := range tests {
+		result := LastDayOfLastMonth(test.day)
+		require.Equal(t, test.expected, result)
+	}
+}
+
+func TestParseDisbursementDateRangeInvalidFrom(t *testing.T) {
+	invalidFromDate := "invalid-date"
+	args := []string{"-from", invalidFromDate, "-to", "2021-10-01"}
+
+	from, to, err := ParseDisbursementDateRange(args)
+	require.Error(t, err)
+	require.Nil(t, from)
+	require.Nil(t, to)
+	require.Contains(t, err.Error(), "error parsing ORDERS_FROM")
+}
+
+func TestParseDisbursementDateRangeInvalidTo(t *testing.T) {
+	invalidToDate := "invalid-date"
+	args := []string{"-from", "2021-10-01", "-to", invalidToDate}
+
+	from, to, err := ParseDisbursementDateRange(args)
+	require.Error(t, err)
+	require.Nil(t, from)
+	require.Nil(t, to)
+	require.Contains(t, err.Error(), "error parsing ORDERS_TO")
+}
