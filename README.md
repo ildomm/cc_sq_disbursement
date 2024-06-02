@@ -13,7 +13,7 @@ The application consists of two parts:
   - It is a background job that runs every 1 minute.
 
 ### 2. Order processor for disbursements
-- The processor is responsible for processing the orders and calculate the disbursements.
+- The processor is responsible for processing the orders and calculating the disbursements.
 - The processor has two execution modes:
     - Without parameters: process all the orders from the database when `created_at` = yesterday.
     - With date range parameters: process all the orders from the database when `created_at` is between the given dates.
@@ -37,10 +37,10 @@ erDiagram
 - Type `make build` to generate the binaries in the `bin` folder.
 
 ### Orders Loader
-- The entrypoint is in `cmd/loader/main.go`
+- The entry point is in `cmd/loader/main.go`
 
 ### Orders Processor
-- The entrypoint is in `cmd/processor/main.go`
+- The entry point is in `cmd/processor/main.go`
 
 ## Development
 
@@ -67,7 +67,7 @@ Steps to deploy the application:
     - /usr/local/orders/failed
 6. Configure the loader binary to run as background job. It does not require cron job configuration, because it relies on the internal scheduler. 
     - `nohup /usr/local/bin/loader > /dev/null 2>&1 &`  
-7. Create a cron job to run the processor. Recommended to run them every midnight.
+7. Create a cron job to run the processor. It is recommended to run them every midnight.
     - `0 0 * * * /usr/local/bin/processor`
 
 ## Testing
@@ -77,24 +77,24 @@ Unit tests are all written with the standard go testing library.
 - Type `make unit-test` to run them.
 
 #### Tests coverage:
-- Type `make coverage-report` to generate an HTML report with the tests coverage.
-- Type `make coverage-total` to check the total tests coverage.
+- Type `make coverage-report` to generate an HTML report with the test coverage.
+- Type `make coverage-total` to check the total test coverage.
 
 ## Future improvements
 - Structured logging
 - Metrics/Monitoring
-- Improve logs, the current ones are not very useful and just implement as a PoC
-- Import each file in a separate goroutine, use a channel to communicate the results.
-- Finish tests coverage for the processor
-- Tests coverage until reach 90% of the code
+- Improve logs, the current ones are not very useful and just implemented as a PoC
+- Import each file in a separate goroutine, and use a channel to communicate the results.
+- Finish test coverage for the processor
+- Tests coverage until reaches 90% of the code
 - Process the daily disbursement step using db transactions
-- Make the FeePercentage's configurable and not hardcoded
-- Make orders CSV files paths configurable and not hardcoded
+- Make the FeePercentage configurable and not hardcoded
+- Make orders CSV file paths configurable and not hardcoded
 - Improve database indexes
 - The `orders` table could be partitioned by `created_at` to improve performance
 
 ## Missing features
-- 90% tests code coverage.
+- 90% test code coverage.
 - Panic recovery handling
 
 ## Considerations
@@ -102,7 +102,7 @@ Unit tests are all written with the standard go testing library.
 - If I could choose the deployment environment, I would use Kubernetes to deploy the application.
 - I would use a CI/CD tool to automate the build and deployment process.
 - I would use a tool to manage the environment variables, like Vault.
-- On my understading of the problem, the Orders attribute `created_at` should be datetime, not date.
-- The disbursements are calculated always for every merchant, even if they have configured per week or per month disbursements. Doing so, it does standardize the process and make it easier to maintain. 
+- On my understanding of the problem, the Orders attribute `created_at` should be datetime, not date.
+- The disbursements are calculated always for every merchant, even if they have configured per-week or per-month disbursements. Doing so, it does standardize the process and makes it easier to maintain. 
 In case any Merchant requires a different disbursement configuration, it would be easy to apply without the need for reprocessing the whole database.
-- I have decided to keep the `fee correction` in a separated attribute in order to facilitate reporting.
+- I have decided to keep the `fee correction` in a separate attribute in order to facilitate reporting.
